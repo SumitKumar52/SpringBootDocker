@@ -44,9 +44,9 @@ jobs:
           WELCOME: "ssh scp ssh pipelines"
           LASTSSH: "Doing something after copying"
         with:
-          host: 'melihcetinvodafsl0034.simplilearnlabs.com'
-          user: 'melihcetinvodaf'
-          pass: 'nvodaf0A@l64ax'
+          host: 'sumitkumar52vodsl0034.simplilearnlabs.com'
+          user: 'sumitkumar52vod'
+          pass: 'r52vod0A@rshn5'
           port: 42006
           connect_timeout: 10s
           first_ssh: |
