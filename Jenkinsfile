@@ -1,43 +1,27 @@
-def containerName="springbootdocker"
-def tag="latest"
-def dockerHubUser="anujsharma1990"
-def gitURL="https://github.com/anujdevopslearn/SpringBootDocker.git"
+node(){
 
-node {
-	def sonarscanner = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-    stage('Checkout') {
-        checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: gitURL]]]
-    }
-
-    stage('Build'){
-        sh "mvn clean install"
-    }
-
-    stage("Image Prune"){
-         sh "docker image prune -f"
-    }
-
-    stage('Image Build'){
-        sh "docker build -t $containerName:$tag --pull --no-cache ."
-        echo "Image build complete"
-    }
-
-    stage('Push to Docker Registry'){
-        withCredentials([usernamePassword(credentialsId: 'dockerHubAccount', usernameVariable: 'dockerUser', passwordVariable: 'dockerPassword')]) {
-            sh "docker login -u $dockerUser -p $dockerPassword"
-            sh "docker tag $containerName:$tag $dockerUser/$containerName:$tag"
-            sh "docker push $dockerUser/$containerName:$tag"
-            echo "Image push complete"
-        }
-    }
+	def sonarHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
 	
-	stage("SonarQube Scan"){
-        withSonarQubeEnv(credentialsId: 'SonarQubeToken') {
-			sh "${sonarscanner}/bin/sonar-scanner"
+	stage('Code Checkout'){
+		checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'GitHubCreds', url: 'https://github.com/anujdevopslearn/MavenBuild']])
+	}
+	stage('Build Automation'){
+		sh """
+			ls -lart
+			mvn clean install
+			ls -lart target
+
+		"""
+	}
+	
+	stage('Code Scan'){
+		withSonarQubeEnv(credentialsId: 'SonarQubeCreds') {
+			sh "${sonarHome}/bin/sonar-scanner"
 		}
-    }
+		
+	}
 	
-	stage("Ansible Deploy"){
-        ansiblePlaybook inventory: 'hosts', playbook: 'deploy.yaml'
-    }
+	stage('Code Deployment'){
+		deploy adapters: [tomcat9(credentialsId: 'TomcatCreds', path: '', url: 'http://54.197.62.94:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
+	}
 }
