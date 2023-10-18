@@ -1,9 +1,4 @@
-FROM openjdk
-
-COPY ./target/demo-docker*.jar /usr/app/dockerDemo.jar
-
-WORKDIR /usr/app
-
+FROM tomcat:8
+COPY target/java-example.war /usr/local/tomcat/webapps/ROOT.war
 EXPOSE 8080
-
-ENTRYPOINT ["java","-jar","dockerDemo.jar"]
+CMD ["catalina.sh", "run"]
